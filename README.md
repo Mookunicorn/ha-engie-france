@@ -14,19 +14,17 @@ Le site n'est interrogé **une fois par jour** (avec un cache local pour éviter
 2. Installe **Engie France – Prix électricité**, redémarre Home Assistant.
 3. Paramètres → Appareils et services → **Ajouter une intégration** → *Engie France*.
 
-## Authentification (v0.1 : cookie de session)
+## Connexion
 
-Pour l'instant l'intégration utilise le **cookie de ta session navigateur** (la connexion par
-email / mot de passe / code SMS ou mail viendra dans une version suivante).
+L'intégration se connecte à ton espace client **avec ton email et ton mot de passe**, comme le fait le navigateur.
+Si Engie demande un code (premier appareil, ou appareil non mémorisé), l'assistant te propose de le recevoir
+par **SMS ou par email** puis te demande de le saisir.
 
-1. Connecte-toi sur <https://particuliers.engie.fr> et ouvre la page
-   `espace-client/consommations/historique-prix-electricite.html`.
-2. Ouvre les outils de développement (F12) → onglet **Réseau** → recharge la page.
-3. Clique sur la requête `historiquePrix?origin=maconso` → **En-têtes de requête** → copie la valeur de `cookie`.
-4. Colle-la dans le formulaire de l'intégration.
-
-Quand la session expire, Home Assistant affiche une demande de **réauthentification** : colle un cookie récent.
-Le cookie est stocké dans la configuration de Home Assistant (non chiffrée) : traite-le comme un mot de passe.
+- La session est conservée sur disque : au quotidien, il n'y a pas de nouvelle connexion tant qu'elle reste valide.
+- Si elle expire, l'intégration se reconnecte seule avec ton mot de passe. Si Engie réclame alors un code,
+  Home Assistant affiche une demande de **réauthentification** (aucun SMS n'est envoyé sans ton action).
+- Si le mot de passe est refusé, l'intégration s'arrête (pour ne pas verrouiller ton compte) et demande de nouveaux identifiants.
+- L'email et le mot de passe sont stockés dans la configuration de Home Assistant (**non chiffrée**) : traite ce dossier comme sensible.
 
 ## Capteurs
 
@@ -48,8 +46,9 @@ L'abonnement n'est pas géré par le tableau Énergie.
 ## Développement
 
 ```bash
-pip install pytest
+pip install -r requirements_test.txt
 python -m pytest
 ```
 
-Les tests utilisent une réponse réelle (identifiants de contrat anonymisés) dans `tests/fixtures/`.
+Les tests utilisent une réponse réelle (identifiants de contrat anonymisés) dans `tests/fixtures/`, et un faux serveur
+Engie/Okta qui rejoue le parcours de connexion (mot de passe, code, redirections OAuth, session mémorisée).
